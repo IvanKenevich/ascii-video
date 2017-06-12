@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.IOException;
 
 /**
  * This class contains all the GUI components of the program,
@@ -36,12 +37,12 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
         imageY = 0;
 
         // This combination looks decent as a starting setting on most screens
-        pixelsPerChar = 4;
+        pixelsPerChar = 3;
         fontSize = 6;
 
         mode = true; // NORMAL video mode by default
         modeButton = new JButton("ASCII");
-        modeButton.setSize(84,26); // the preferred size for the "NORMAL" text
+        modeButton.setSize(84, 26); // the preferred size for the "NORMAL" text
         modeButton.addActionListener(this);
         modeButton.setFocusable(false); // so that the keyboard focus doesn't switch to the button when it's pressed
         add(modeButton);
@@ -51,9 +52,11 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
         addMouseMotionListener(this);
 
         // Connects to the default device, INCREMENT THE NUMBER IF YOU WISH TO USE ANOTHER CAMERA
-        beginCapture(0);
+        //beginCapture(1);
+        ASCIIConversion.openInputStream("C:\\Users\\Ivan\\Desktop\\out.txt");
 
-        Timer t = new Timer(1000/DESIRED_FPS, this);
+
+        Timer t = new Timer(1000 / DESIRED_FPS, this);
         t.start();
     }
 
@@ -83,7 +86,13 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
     private BufferedImage convertFrameToASCII(BufferedImage img) {
         if (img != null) {
             image = ASCIIConversion.writeASCIIToImage(ASCIIConversion.imageToASCII(img, pixelsPerChar, 2), fontSize);
+            try {
+                ASCIIConversion.writeASCIIFrameToFile(ASCIIConversion.imageToASCII(img, pixelsPerChar, 2),"C:\\Users\\Ivan\\Desktop\\out.txt");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
         return image;
     }
 
@@ -109,11 +118,23 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
             else
                 modeButton.setText("ASCII");
             mode = !mode;
-            imageX=0;
-            imageY=0;
+            imageX = 0;
+            imageY = 0;
         }
-        captureFrame();
+        //captureFrame();
+        readImage();
         repaint();
+    }
+
+    private void readImage() {
+        try {
+            char[][] asciiArt = ASCIIConversion.readASCIIFrameFromFile();
+
+            if (asciiArt!=null)
+                image = ASCIIConversion.writeASCIIToImage(asciiArt, fontSize);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
     }
 
     @Override

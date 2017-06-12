@@ -26,6 +26,13 @@ public class ASCIIConversion {
     private static final char[] MEDIUM_CHAR_SET = "@B8&M#oakbpqmZ0QCJYXcvnxjf/|?-+~!l;:^`. ".toCharArray(); //40 chars
     private static final char[] SMALL_CHAR_SET = "@B&#abqZQJXvxf|-~l:` ".toCharArray(); //21 chars
 
+    private static boolean firstTimeWriting = true;
+    private static boolean firstTimeReading = true;
+
+    private static int asciiArrayWidth, asciiArrayHeight;
+
+    private static FileReader inputStream;
+
     /**
      * Converts an image into an array of ASCII symbols.
      * <p>
@@ -171,6 +178,56 @@ public class ASCIIConversion {
         writer.close();
     }
 
+    public static void writeASCIIFrameToFile(char[][] asciiArt, String path) throws IOException {
+        FileWriter outputStream = null;
+
+        //System.out.println(".length"+asciiArt.length);
+        //System.out.println("[0].length"+asciiArt[0].length);
+
+        try {
+            outputStream = new FileWriter(path, true); // true is for appending
+            for (char[] row : asciiArt) {
+                for (char ch : row) {
+                    outputStream.write(ch);
+                }
+            }
+        } finally {
+            if (outputStream != null) {
+                outputStream.close();
+            }
+        }
+    }
+
+    public static void openInputStream(String path) {
+        inputStream = null;
+
+        try {
+            inputStream = new FileReader(new File(path));
+
+        } catch (IOException e) {
+
+        }
+    }
+
+    public static char[][] readASCIIFrameFromFile() throws IOException {
+
+        char[][] result = new char[160][213];
+
+        for (int row = 0; row < result.length; row++) {
+            for (int col = 0; col < result[0].length; col++) {
+                int c;
+                if ((c = inputStream.read()) != -1) {
+                    result[row][col] = (char) c;
+                }
+                else {
+                    inputStream.close();
+                }
+            }
+        }
+
+        return result;
+    }
+
     /**
      * Writes ASCII art represented in a character array to a BigBufferedImage object.
      * <p>
@@ -199,6 +256,8 @@ public class ASCIIConversion {
         return img;
     }
 
+
+    @Deprecated
     public static void drawASCIIFrameUsingBytes(Mat m, Graphics g, int charSetSize, int fontSize, int pixelsPerChar) {
         Imgproc.cvtColor(m, m, Imgproc.COLOR_RGB2GRAY); // converting the frame to greyscale
 
@@ -218,7 +277,7 @@ public class ASCIIConversion {
                     total += data[row * m.width() + col + n];
                 }
                 int average = total / pixelsPerChar;
-                g.drawString(String.valueOf(generateChar(average, 6)), (col/pixelsPerChar) * spacing, ((row/pixelsPerChar) * spacing) + spacing);
+                g.drawString(String.valueOf(generateChar(average, 6)), (col / pixelsPerChar) * spacing, ((row / pixelsPerChar) * spacing) + spacing);
             }
         }
     }
