@@ -6,6 +6,7 @@ import javax.imageio.*;
 import java.awt.image.*;
 import java.io.*;
 import java.awt.*;
+import java.nio.CharBuffer;
 
 
 /**
@@ -26,8 +27,7 @@ public class ASCIIConversion {
     private static final char[] MEDIUM_CHAR_SET = "@B8&M#oakbpqmZ0QCJYXcvnxjf/|?-+~!l;:^`. ".toCharArray(); //40 chars
     private static final char[] SMALL_CHAR_SET = "@B&#abqZQJXvxf|-~l:` ".toCharArray(); //21 chars
 
-    private static boolean firstTimeWriting = true;
-    private static boolean firstTimeReading = true;
+    public static int pixelsPerChar, charsetSize, fontSize;
 
     private static int asciiArrayWidth, asciiArrayHeight;
 
@@ -41,12 +41,10 @@ public class ASCIIConversion {
      * the greyscale is converted to a character of varying brightness, and then is put into the
      * character array.
      *
-     * @param img           The image that is to be converted into ASCII art.
-     * @param pixelsPerChar The amount of pixels whose average greyscale will be taken and assigned to an ASCII symbol.
-     * @param charSetSize   The size of the array of characters that the ASCII generator has to choose from.
+     * @param img The image that is to be converted into ASCII art.
      * @return A character array containing the ASCII art.
      */
-    public static char[][] imageToASCII(BufferedImage img, int pixelsPerChar, int charSetSize) {
+    public static char[][] imageToASCII(BufferedImage img) {
         int argb, red, green, blue, imgHeight, imgWidth, blockAverage, stepSize;
 
         BufferedImage tempImage = new BufferedImage(img.getWidth(), img.getHeight(), img.getType());
@@ -64,11 +62,11 @@ public class ASCIIConversion {
         //Each stepsize forms a range in which a certain character will be generated if a greyscale value falls within that range.
         //stepsize is calculated outside of generateChar() so that it only has to be calculated once instead of for each character.
         stepSize = 0;
-        if (charSetSize == 0) {
+        if (charsetSize == 0) {
             stepSize = 12;
-        } else if (charSetSize == 1) {
+        } else if (charsetSize == 1) {
             stepSize = 6;
-        } else if (charSetSize == 2) {
+        } else if (charsetSize == 2) {
             stepSize = 4;
         }
 
@@ -237,7 +235,7 @@ public class ASCIIConversion {
      *
      * @param asciiArt the ASCII art to be written to a file.
      */
-    public static BufferedImage writeASCIIToImage(char[][] asciiArt, int fontSize) {
+    public static BufferedImage writeASCIIToImage(char[][] asciiArt) {
         int spacing = fontSize + 2;
         BufferedImage img = new BufferedImage(asciiArt[0].length * spacing, (asciiArt.length * spacing) + spacing, BufferedImage.TYPE_INT_RGB);
 
@@ -258,7 +256,7 @@ public class ASCIIConversion {
 
 
     @Deprecated
-    public static void drawASCIIFrameUsingBytes(Mat m, Graphics g, int charSetSize, int fontSize, int pixelsPerChar) {
+    public static void drawASCIIFrameUsingBytes(Mat m, Graphics g) {
         Imgproc.cvtColor(m, m, Imgproc.COLOR_RGB2GRAY); // converting the frame to greyscale
 
         byte[] data = new byte[m.width() * m.height()];

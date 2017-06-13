@@ -23,7 +23,7 @@ public class Main {
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                //vp.endCapture();
+                vp.endCapture();
             }
         });
 

@@ -21,11 +21,9 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
 
     private int width, height,
             imageX, imageY,
-            pixelsPerChar, fontSize,
             mouseX, mouseY, previousMouseX, previousMouseY;
 
-    private boolean mode;
-    private JButton modeButton;
+    private boolean isNormalMode;
 
     public VideoPanel(int width, int height) {
         super(null);
@@ -33,27 +31,16 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
         this.width = width;
         this.height = height;
 
-        imageX = 0;
-        imageY = 0;
-
         // This combination looks decent as a starting setting on most screens
-        pixelsPerChar = 3;
-        fontSize = 6;
+        ASCIIConversion.pixelsPerChar = 3;
+        ASCIIConversion.charsetSize = 2;
+        ASCIIConversion.fontSize = 6;
 
-        mode = true; // NORMAL video mode by default
-        modeButton = new JButton("ASCII");
-        modeButton.setSize(84, 26); // the preferred size for the "NORMAL" text
-        modeButton.addActionListener(this);
-        modeButton.setFocusable(false); // so that the keyboard focus doesn't switch to the button when it's pressed
-        add(modeButton);
-
-        setFocusable(true);
-        addKeyListener(this);
-        addMouseMotionListener(this);
+        setupGUI();
 
         // Connects to the default device, INCREMENT THE NUMBER IF YOU WISH TO USE ANOTHER CAMERA
-        //beginCapture(1);
-        ASCIIConversion.openInputStream("C:\\Users\\Ivan\\Desktop\\out.txt");
+        beginCapture(1);
+        //ASCIIConversion.openInputStream("C:\\Users\\Ivan\\Desktop\\out.txt");
 
 
         Timer t = new Timer(1000 / DESIRED_FPS, this);
@@ -78,19 +65,20 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
         Mat m = new Mat();
         capture.read(m);
         image = matToBufferedImage(m);
-        if (!mode) {
+        if (!isNormalMode) {
             image = convertFrameToASCII(image);
         }
     }
 
     private BufferedImage convertFrameToASCII(BufferedImage img) {
         if (img != null) {
-            image = ASCIIConversion.writeASCIIToImage(ASCIIConversion.imageToASCII(img, pixelsPerChar, 2), fontSize);
-            try {
-                ASCIIConversion.writeASCIIFrameToFile(ASCIIConversion.imageToASCII(img, pixelsPerChar, 2),"C:\\Users\\Ivan\\Desktop\\out.txt");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            char[][] asciiArr = ASCIIConversion.imageToASCII(img);
+            image = ASCIIConversion.writeASCIIToImage(asciiArr);
+//            try {
+//                ASCIIConversion.writeASCIIFrameToFile(asciiArr,"C:\\Users\\Ivan\\Desktop\\out.txt");
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
         }
 
         return image;
@@ -112,17 +100,8 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == modeButton) {
-            if (mode)
-                modeButton.setText("NORMAL");
-            else
-                modeButton.setText("ASCII");
-            mode = !mode;
-            imageX = 0;
-            imageY = 0;
-        }
-        //captureFrame();
-        readImage();
+        captureFrame();
+        //readImage();
         repaint();
     }
 
@@ -130,8 +109,8 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
         try {
             char[][] asciiArt = ASCIIConversion.readASCIIFrameFromFile();
 
-            if (asciiArt!=null)
-                image = ASCIIConversion.writeASCIIToImage(asciiArt, fontSize);
+            if (asciiArt != null)
+                image = ASCIIConversion.writeASCIIToImage(asciiArt);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -145,18 +124,18 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.isAltDown()) {
-            if (e.getKeyCode() == KeyEvent.VK_UP && pixelsPerChar > 1) {
-                pixelsPerChar--;
+            if (e.getKeyCode() == KeyEvent.VK_UP && ASCIIConversion.pixelsPerChar > 1) {
+                ASCIIConversion.pixelsPerChar--;
                 imageX = 0;
                 imageY = 0;
             } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                pixelsPerChar++;
+                ASCIIConversion.pixelsPerChar++;
                 imageX = 0;
                 imageY = 0;
-            } else if (e.getKeyCode() == KeyEvent.VK_LEFT && fontSize > 1) {
-                fontSize--;
+            } else if (e.getKeyCode() == KeyEvent.VK_LEFT && ASCIIConversion.fontSize > 1) {
+                ASCIIConversion.fontSize--;
             } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                fontSize++;
+                ASCIIConversion.fontSize++;
             }
         } else {
             if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -192,5 +171,31 @@ public class VideoPanel extends JPanel implements ActionListener, KeyListener, M
         mouseY = e.getY();
         previousMouseX = mouseX;
         previousMouseY = mouseY;
+    }
+
+    private void setupGUI() {
+        imageX = 0;
+        imageY = 0;
+
+        isNormalMode = true; // NORMAL video isNormalMode by default
+
+        JButton modeButton = new JButton("ASCII");
+        modeButton.setSize(84, 26); // the preferred size for the "NORMAL" text
+        modeButton.addActionListener(e -> {
+            if (isNormalMode)
+                modeButton.setText("NORMAL");
+            else
+                modeButton.setText("ASCII");
+            isNormalMode = !isNormalMode;
+            imageX = 0;
+            imageY = 0;
+        });
+        modeButton.setFocusable(false); // so that the keyboard focus doesn't switch to the button when it's pressed
+        add(modeButton);
+
+
+        setFocusable(true);
+        addKeyListener(this);
+        addMouseMotionListener(this);
     }
 }
